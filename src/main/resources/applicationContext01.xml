@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+<!--1.视图解析器-->
+<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="prefix" value="/background/" />
+    <property name="suffix" value=".jsp" />
+</bean>
+
+<!--2.包扫描器-->
+<context:component-scan base-package="cn.zh.Dome01"></context:component-scan>
+
+<!--3.注解驱动-->
+<mvc:annotation-driven/>
+
+<!--1.数据源 阿里-->
+<bean class="com.alibaba.druid.pool.DruidDataSource" id="dataSource">
+    <property value="${jdbc.driver}" name="driverClassName"/>
+    <property value="${jdbc.url}" name="url"/>
+    <property value="${jdbc.username}" name="username"/>
+    <property value="${jdbc.password}" name="password"/>
+</bean>
+
+<!--2.识别到jdbc.properties-->
+<context:property-placeholder location="classpath:jdbc.properties"/>
+
+<!--3.SqlSessionFactory-->
+<bean class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <property value="classpath:Mybatis-config.xml" name="configLocation"/>
+</bean>
+
+<!--4.DAO-->
+<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    <property name="basePackage" value="cn.zh.Dome01.dao" />
+</bean>
+
+<!--6.事务管理器 MyBatis 的 -->
+<bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+
+<!--7.事务-->
+<tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <bean name="myoperate" class="cn.zh.Dome01.aop.LogAfterAdvice"></bean>
+
+    <aop:config proxy-target-class="true">
+       <!-- <aop:pointcut id="myaop" expression="execution(**..*Controller.*Controller(..))"></aop:pointcut>-->
+        <aop:pointcut id="myaop" expression="execution(* *..*Controller.*Controller.*(..))"></aop:pointcut>
+        <aop:advisor advice-ref="myoperate" pointcut-ref="myaop"></aop:advisor>
+    </aop:config>
+
+   <!-- <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mysql:///y2167"></property>
+        <property name="user" value="root"></property>
+        <property name="password" value="root"></property>
+    </bean>-->
+    <!-- SpringMVC文件上传 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!--defaultEncoding：请求的编码格式必须和用户JSP的编码一致，以便正确读取表单中的内容。
+            uploadTempDir:文件上传过程中的临时目录，上传完成后，临时文件会自动删除
+            maxUploadSize:设置文件上传大小上限（单位为字节） -->
+        <property name="defaultEncoding" value="UTF-8" />
+        <property name="maxUploadSize" value="102400000" />
+        <!--uploadTempDir可以不做设置，有默认的路径，上传完毕会临时文件会自动被清理掉
+        <property name="uploadTempDir" value="upload/temp"></property> -->
+    </bean>
+</beans>

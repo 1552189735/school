@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="cn.zh.Dome01.dao.IUserInfoDAO">
+    <!--登录-->
+    <select resultType="UserInfo" id="login">
+        select * from UserInfo where uid = #{uid} and upwd=#{upwd}
+    </select>
+    <!--查询所有的用户-->
+      <select id="userlist" resultType="UserInfo">
+          select * from UserInfo
+      </select>
+    <!--根据id查询单个用户-->
+    <select id="oneuser" resultType="UserInfo">
+        SELECT * FROM UserInfo where uid=#{uid}
+    </select>
+    <!--修改用户信息-->
+    <update id="updateuser" parameterType="UserInfo">
+          UPDATE UserInfo SET uname=#{uname},unickname=#{unickname},upwd=#{upwd},uroleid=#{uroleid},uemail=#{uemail},uphone=#{uphone},uidentityid=#{uidentityid},ubirhtday=#{ubirhtday},ugradeid=#{ugradeid},ugender=#{ugender} WHERE uid=#{uid}
+    </update>
+    <!--添加用户-->
+    <insert id="add" parameterType="UserInfo" >
+        INSERT into UserInfo(uname,unickname,upwd,uroleid,uemail,uphone,uidentityid,ubirhtday,ugradeid,ugender) VALUES(#{uname},#{unickname},#{upwd},#{uroleid},#{uemail},#{uphone},#{uidentityid},#{ubirhtday},#{ugradeid},#{ugender})
+    </insert>
+    <!--删除用户-->
+    <delete id="deluser" parameterType="UserInfo" >
+        DELETE from UserInfo where uid=#{uid}
+    </delete>
+    <!--修改密码-->
+    <update id="updatepwd" parameterType="UserInfo">
+        UPDATE  UserInfo SET upwd=#{upwd} where uid=#{uid}
+    </update>
+     <!--获取单页记录数-->
+    <select id="getonepagecount" resultType="UserInfo">
+        select * FROM  UserInfo
+         <where>
+             <if test="uname!=null"> and uname like '%' #{uname} '%' </if>
+         </where>
+        limit #{indexpage},#{pagesize}
+    </select>
+    <!--获取总记录数-->
+    <select id="getcount" resultType="int">
+        select count(1)  FROM  UserInfo
+        <where>
+            <if test="uname!=null"> and uname like '%' #{uname} '%' </if>
+        </where>
+    </select>
+    <!--查询所有年级和班级-->
+    <select id="allclass" resultType="Classes">
+        SELECT * from dictionary
+    </select>
+    <!--根据班级id查询所在班级学员列表-->
+    <select id="classuser" resultType="UserInfo">
+       SELECT * from userinfo where ugradeid=#{id}
+    </select>
+    <!--添加班级出勤情况-->
+    <insert id="addattendance">
+        INSERT INTO attendance(uid,attendance,times) VALUES (#{uid},#{attendance},#{times})
+    </insert>
+    <!--查询今天的考勤是否已保存-->
+    <select id="countattendance" resultType="int">
+        SELECT COUNT(1) FROM `attendance` sa,`userinfo` u WHERE u.ugradeid=#{ugradeid} AND u.uid=sa.uid
+AND CURDATE()= DATE (sa.times)
+    </select>
+    <!--根据姓名查询用户的出勤情况-->
+    <select id="oneattendance" resultType="Attendance">
+        select u.uid,u.uname,a.attendance,a.times FROM userinfo u,attendance a
+        <where>
+        <if test="uname!=null and uname!=''"> and u.uname=#{uname} </if>
+        <if test="startime!=null and startime!=''">and times &gt;= #{startime}</if>
+        <if test="endtime!=null and endtime!=''">and times &lt;= #{endtime}</if>
+    </where>
+        AND   u.uid=a.uid
+    </select>
+    <!--班级查询出勤情况-->
+    <select id="classattendance" resultType="Attendance">
+        SELECT u.uid,u.uname,a.attendance,u.ugradeid,a.times FROM userinfo u,attendance a
+        <where>
+            <if test="ugradeid!=null and ugradeid!=''"> and u.ugradeid=#{ugradeid} </if>
+            <if test="startime!=null and startime!=''">and times &gt;= #{startime}</if>
+            <if test="endtime!=null and endtime!=''">and times &lt;= #{endtime}</if>
+    </where>
+             AND u.uid=a.uid
+    </select>
+    <!--导入的添加用户-->
+    <insert id="addinto" parameterType="UserInfo" >
+        INSERT into UserInfo(uname,unickname,upwd,uroleid,uemail,uphone,uidentityid,ubirhtday,ugradeid,ugender) VALUES(#{uname},#{unickname},#{upwd},#{uroleid},#{uemail},#{uphone},#{uidentityid},#{ubirhtday},#{ugradeid},#{ugender})
+    </insert>
+      <!--查询三级分类-->
+    <select id="selectAllTypeThreeSys_course" resultType="Course">
+    SELECT * FROM sys_course WHERE tcparent IN(SELECT c.tcid AS ciddd  FROM sys_course  AS c WHERE tcparent IN(SELECT tcid FROM sys_course WHERE tcparent=0)) ORDER BY ttime DESC
+    </select>
+    <!--添加视频-->
+    <insert id="insertVideoItemForm">
+        INSERT INTO sys_video(tvname,turl,tcid) VALUES (#{tvname},#{turl},#{tcid})
+    </insert>
+     <!--根据班级id查询到所有班级考试-->
+         <select id="alltitle" resultType="Achievement">
+             select DISTINCT title,date(time) time from Achievement where ugradeid=#{ugradeid}
+         </select>
+    <!--根据班级id和试卷标题查询学员姓名和成绩-->
+    <select id="allres" resultType="Achievement">
+        SELECT u.uname,a.achievement FROM userInfo u,achievement a WHERE u.uid=a.uid AND a.ugradeid=#{ugradeid} AND a.`title`=#{title}
+    </select>
+</mapper>

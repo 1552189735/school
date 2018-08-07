@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        <mapper namespace="cn.zh.Dome01.dao.IPrivilegeDAO">
+    <!--根据id获取这个类型能支配的全部权限-->
+       <select id="getprivilege" resultType="privilege">
+            select * from Sys_Privilege where id in ( select privilegeId from sys_role_privilege where roleId in ( select roleId from sys_user_role where userId=#{uid} ) )
+       </select>
+  <!--  &lt;!&ndash;查询所有的角色&ndash;&gt;
+    <select id="getrole" resultType="Role">
+        select * from sys_role
+    </select>-->
+    <!--查询所有的权限-->
+    <select id="getallprivilege" resultType="privilege">
+        select * from sys_privilege
+    </select>
+    <!--根据id查询角色的权限-->
+    <select id="getoneprivilege" resultType="privilege">
+          select distinct id,url,name,parent,icon from sys_privilege as p,sys_role_privilege as rp where p.`id`=rp.`privilegeId` and rp.roleId=#{rid}
+    </select>
+    <!--根据id删除角色权限-->
+    <delete id="delroleprivilege" parameterType="privilege">
+        DELETE FROM sys_role_privilege where  roleId=#{rid}
+    </delete>
+<!--根据id添加权限-->
+    <insert id="addprivilege" parameterType="privilege">
+        INSERT into sys_role_privilege(roleId,privilegeId) VALUES (#{0},#{1})
+    </insert>
+</mapper>
